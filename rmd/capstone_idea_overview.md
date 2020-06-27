@@ -1,0 +1,278 @@
+Clustering and Visualizing PMC search results
+================
+Arpan Neupane
+22/06/2024
+
+## Main
+
+Pub Med Central (PMC) is a “repository” of scientific literature. As a
+graduate student myself, I have extensively relied on PMC for my own
+research on immune cells in the lung. A feature, that I think, could
+significantly help expedite research (on specific topic(s)) is allowing
+visualizations of clusters of scientific literature. For example: a)
+sorting and clustering research papers (specific topic) based on authors
+may help identify frequently collaborating networks, b) sorting and
+clustering based on title and abstract could help papers with similar
+content (potentially regarding the topic of interest) stay “visually”
+close together, facilitating ease of access. A further implementation of
+an additional feature where hovering the mouse over a “dot”
+(representing a specific paper) could offer a summary of the paper,
+would further benefit the user. Overall, this can significantly reduce
+cumbersome clicking, opening of multiple webpages, and scrolling through
+myriads of pages, which is the current practice for most researchers.
+
+## Beneficiaries
+
+If the project could be implemented, the main beneficiaries would be the
+general public (including academics)\! Text-based search results
+(especially when querying a research topic) is boring and tedious.
+Academics have now been entrenched in this paradigm. As such,
+alternatives are rarely thought about. Having search results visually
+delivered may help academics and non-academics conduct research in a
+more fun and interactive manner.
+
+## Minimum requirements
+
+At minimum, the project should aim at “clustering” based on authors. For
+example: consider searching PMC with term “lung cancer”. Hundreds of
+results are present. The current approach required either knowing a
+specific researcher in order to further filer out the results or simply
+opening multiple tabs to read through the author lists and abstract.
+Simply, at minimum, displaying results as clusters of authors would
+expediate researching topics. However, for best value of the project,
+additional filtering and clustering based on title and abstract content,
+would be idea Additionally, search needs to “mimic” features employed by
+the PMC search feature.For example: Author: A; Year(s):1980-2020;Search
+term: “some text”, should still provide the same results as PMC.
+Finally,this is in an idea scenario, instead of “downloading” all of
+PMC, it may be best to use a “middleman” approach where the search is
+passed to PMC, results from PMC extracted, clustering performed (if
+necessary, as per user specification), and results presented.
+
+## References
+
+Upon researching whether this idea is worthwhile, or viable, I came
+across the following:
+<https://github.com/MaksimEkin/COVID19-Literature-Clustering> Authors:
+Eren, E. Maksim. Solovyev, Nick. Nicholas, Charles. Raff, Edward
+
+Because of the author above seems to have performed some parts of what
+my proposal entails, I think it is important to cite their work.
+However, considering that my project proposal presents a new idea for
+searching for scientific literature, the project should still be
+considered a viable option as a capstone project. If implemented
+efficiently, the project could be an important tool for scientific
+research.
+
+## Last bit of blabbering before coding
+
+The following code is an example of how the data was collected for
+project proposal. It is worth noting that PMC repository is an extremely
+well characterized data. Thus, at anygiven time, performance of the
+project can be tested against results obtained through PMC (gold
+standard) in terms of yielding “good” results.
+
+Finally, this is a small attempt my a novice. I’m certain, with further
+training and right toolset, I can complete this project.
+
+## Data collection (preliminary)
+
+note evaluations are turned off to prevent download of large amounts of
+data.
+
+``` r
+if(!"RISmed" %in% installed.packages()){
+  install.packages("RISmed")
+  library(RISmed)
+}else library(RISmed)
+```
+
+Let’s first look at my favorite cell type: Macrophages
+
+``` r
+my_query <- "macrophages"
+macrophage_results <- EUtilsSummary(my_query,type = "esearch", db = "pubmed", mindate = 2010,maxdate = 2020)
+summary(macrophage_results)
+```
+
+There are over 100K articles related to “macrophages”. Maybe looking at
+all of them for the purposes of EDA as a proof of concept isn’t the best
+idea. Let’s limit from 2017:2020
+
+``` r
+my_query <- "macrophages"
+macrophage_results <- EUtilsSummary(my_query,type = "esearch", db = "pubmed", mindate = 2017,maxdate = 2020, retmax = 5000)
+summary(macrophage_results)
+```
+
+40K articles\! PMID for 5000 articles will be extracted
+
+I will also repeat the same for other cell types/terms: Neutrophils,
+dendritic cells, T cells, B cells, lymph node, lung and immune, liver.
+
+There terms, along with macrophages, will serve as a label of “dataset”
+in the aggregated dataframe
+(below).
+
+``` r
+my_queries <- c("neutrophil", "dendritic cells","t cells", "b cells", "lymph node", "lung and immune","liver and immune", "spleen")
+
+many_queries <-  list()
+for(i in my_queries){
+  many_queries[[i]] <- EUtilsSummary(i,type = "esearch", db = "pubmed", mindate = 2017,maxdate = 2020, retmax = 5000)
+}
+
+many_queries
+```
+
+First extract data for macrophage only. This will also inform the amount
+of time needed to generate larger
+data.
+
+``` r
+macrophage_data <- EUtilsGet(macrophage_results,type = "efetch",db = "pubmed")
+class(macrophage_data)
+```
+
+This was not a “rapid” response and took some time.
+
+Now try to load data for the other query terms. Not sure if this will
+work either
+
+``` r
+many_data <- list()
+
+for (i in names(many_queries)){
+  many_data[[i]] <- EUtilsGet(many_queries[[i]],type = "efetch", db = "pubmed")
+  Sys.sleep(time = 1)
+  }
+```
+
+This took even longer. But in total I was able to get \~30K articles
+
+Let’s try to get the following information: 1) Title 2) Author list 3)
+Published date 4) Journal 5) Abstract 6) Keywords
+
+How do I extract relevant information from these results?
+
+will attempt to use: methods(class = "") to search for available
+functions.
+
+``` r
+class(macrophage_data)
+
+methods(class = "Medline")
+```
+
+Now to create dataframe with results.
+
+``` r
+many_data$macrophages <- macrophage_data #was lonely
+
+my_data <- list()
+
+my_data <- lapply(many_data, function(i){
+  return(tibble(PMID = PMID(i), articletitle = ArticleTitle(i),
+                    abstract = AbstractText(i), authorlist = Author(i),
+                    journal = Title(i), 
+                    #mmddyy on Pubmed
+                    publishedon = paste(MonthPubmed(i),DayPubmed(i),YearPubmed(i),sep = "/"),country = Country(i)))
+    }
+  )
+
+for (i in names(my_data)){
+  my_data[[i]] <- my_data[[i]] %>% mutate(dataset = i)
+}
+
+my_data <- bind_rows(my_data)
+glimpse(my_data)
+```
+
+Note that I used tibble to create dataframe. authorlist outputs a
+dataframe with LastName, ForeName, FirstName initials(Initials) ,and
+order of authorship.
+
+I think for my purposes, it might be best to get rid of initials and
+order. Authors will be identified via lastname firstname.
+
+``` r
+author_names <- function(df){#input is a dataframe
+  #because the struture is predictable; I will only use the first 2 columns
+  #print(df)
+  v <- vector(length = nrow(df))
+  #print(v)
+  counter = 1
+  for (i in 1:nrow(df)){
+    v[counter] = paste(df[i,2],df[i,1],sep = " ")
+    counter = counter +1
+    #print(v)
+  }
+  #print(class(v))
+  return(as.vector(v))
+}
+
+#saves author information as a list
+my_data <-  my_data %>% mutate(authorlist = sapply(authorlist,author_names))
+
+
+glimpse(my_data)
+```
+
+Finally, in total there are 29923 observations.
+
+``` r
+library(lubridate)
+my_data <- my_data %>% mutate(publishedon = mdy(publishedon)) 
+glimpse(my_data)
+my_data %>% select(publishedon) %>% pull %>% year %>%  range
+```
+
+The observations range only from 2018 - 2020 though the download date
+was from 2017 to 2020 Either way. I think now we have a good sized data
+set for further analysis.
+
+Because there might be some data that are repeated; we will remove them
+to refine our df
+
+``` r
+unique(my_data$PMID) %>% length
+my_data <- my_data[!duplicated(my_data$PMID),]
+
+nrow(my_data) ==  unique(my_data$PMID) %>% length
+```
+
+Some basic EDA to see what the dataset looks like.
+
+``` r
+library(ggplot2)
+my_data %>% mutate(only_year = year(publishedon)) %>% group_by(only_year,dataset) %>% summarise(total = n()) %>%  mutate(prop = total/sum(total)) 
+
+my_data %>% mutate(only_year = year(publishedon)) %>% group_by(only_year,dataset) %>% summarise(total = n()) %>%  mutate(prop = total/sum(total)) %>% ggplot(aes(x = dataset, y = prop, fill = as.factor(only_year)))+
+  geom_col(position = "fill")+theme(axis.text.x = element_text(angle = 90))
+```
+
+There is only 1 entry for 2018; maybe worth just removing it
+
+``` r
+my_data <- my_data %>% filter(year(publishedon)!= 2018)
+
+my_data %>% mutate(only_year = year(publishedon)) %>% group_by(only_year,dataset) %>% summarise(total = n()) %>%  mutate(prop = total/sum(total)) 
+```
+
+Can also look by just dataset (not
+year)
+
+``` r
+my_data %>% mutate(only_year = year(publishedon)) %>% group_by(dataset) %>% summarise(total = n()) %>%  mutate(prop = total/sum(total)) 
+
+path <- paste(getwd(),"datafiles/Capstone_project_TDI2020",sep = "/")
+
+save.image(file = path)#save image of environment
+
+#save my_data object
+path <-  paste(getwd(),"datafiles/prelim_data",sep="/") 
+
+saveRDS(my_data,file = path)
+```
+
+\#\#End here for pre-processing.

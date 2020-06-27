@@ -3,9 +3,8 @@ title: "Clustering and Visualizing PMC search results"
 author: "Arpan Neupane"
 date: "22/06/2024"
 output:
-  html_document: default
-  pdf_document: default
-  word_document: default
+  github_document:
+    html_preview: False
 ---
 
 ```{r setup, include=FALSE}
