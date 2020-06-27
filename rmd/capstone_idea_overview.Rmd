@@ -3,9 +3,9 @@ title: "Clustering and Visualizing PMC search results"
 author: "Arpan Neupane"
 date: "22/06/2024"
 output:
-  word_document: default
-  pdf_document: default
   html_document: default
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -37,6 +37,7 @@ It is worth noting that PMC repository is an extremely well characterized data. 
 Finally, this is a small attempt my a novice. I'm certain, with further training and right toolset, I can complete this project. 
 
 ## Data collection (preliminary)
+note evaluations are turned off to prevent download of large amounts of data.
 
 ```{r eval = F }
 if(!"RISmed" %in% installed.packages()){

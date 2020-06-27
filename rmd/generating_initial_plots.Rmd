@@ -1,11 +1,11 @@
 ---
-title: "Preliminary data"
+title: "generating initial plots"
 author: "Arpan Neupane"
 date: "24/06/2020"
 output:
-  word_document: default
-  pdf_document: default
   html_document: default
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -19,23 +19,42 @@ dataframe has been saved as rdata
 ```{r eval=T}
 library(tidyverse)
 path <- paste(getwd(),"datafiles","prelim_data",sep = "/")
+path <- gsub("/rmd",replacement = "",path);path
 my_data <- readRDS(file = path)
 glimpse(my_data)
 ```
 
-```{r }
-glimpse(my_data)
+## Where are most publications coming from?
+
+```{r}
+
+my_data %>%ungroup %>%  group_by(country) %>% filter(!duplicated(articletitle)) %>% 
+  summarize(total_pub = n()) %>% filter(total_pub>10) %>% arrange(desc(total_pub))
+#note United States and United States of America!
+
+my_data <- my_data %>% rowwise %>% mutate(country = ifelse(country == "United States of America","United States",country))
+
+#selecting countries with >10 publications
+
+countries <- my_data %>% ungroup %>% group_by(country) %>% filter(!duplicated(articletitle)) %>% summarize(total_pub = n()) %>% 
+  filter(total_pub>10) %>% select(country) %>% unique %>% pull
+
+my_data_filtered <- my_data %>% filter(country %in% countries)
+
 ```
+
 
 ## Top 20 authors
 The author ordering hasn't been kept. For my exploratory purposes, all authors get an equal chance to be represented, even the middle ones.
 
 ```{r}
 
-t_20 <- my_data %>% na.omit %>%filter(authorlist != "NA NA") %>% 
+t_20 <- my_data_filtered %>% na.omit %>%unnest(authorlist) %>% filter(authorlist != "NA NA") %>% 
   group_by(authorlist,dataset) %>% summarize(total_pub = n()) %>% arrange(desc(total_pub)) %>% select(authorlist) %>% 
   pull %>% head(20)
 t_20
+
+
 ```
 
 Florent Ginhoux is a very well known name in macrophage and DC biology. So far so good.
@@ -45,7 +64,7 @@ Let's visualize the first preliminary plot.
 
 #First plot
 ```{r}
-initial_plot <- my_data %>% filter(authorlist %in% t_20) %>% group_by(authorlist,journal,dataset) %>% summarize(total_pub = n()) %>% 
+initial_plot <- my_data_filtered %>% unnest(authorlist) %>% filter(authorlist %in% t_20) %>% group_by(authorlist,journal,dataset) %>% summarize(total_pub = n()) %>% 
   arrange(desc(total_pub)) %>% 
   ggplot(aes(x = reorder(authorlist,total_pub), y= total_pub))+
   geom_col(aes(fill = dataset),position = "fill")+
@@ -58,6 +77,7 @@ initial_plot <- my_data %>% filter(authorlist %in% t_20) %>% group_by(authorlist
         Does not fully reflect all publications from 2018-2020")
 
 initial_plot
+
 ```
 
 This shows already that there exists a lot of "crossing over" of authors between different dataset. 
@@ -74,7 +94,7 @@ We will parse through the title+abstract for some key terms, which still relate 
 search_terms <- c("b cells|b-cells|b cell|b-cell","t-cells|t cells|t cell|t-cell","dendritic|dc|dcs|dendritic cells","macrophages|macrophage",
                   "neutrophil|neutrophils","lymph node|LN|lymph nodes")
 
-second_plot <- my_data %>% filter(authorlist %in% t_20) %>% mutate(combine_both = paste0(abstract,articletitle)) %>% 
+second_plot <- my_data_filtered %>% unnest(authorlist) %>% filter(authorlist %in% t_20) %>% mutate(combine_both = paste0(abstract,articletitle)) %>% 
   mutate(title_contains= case_when(
   grepl(search_terms[1],combine_both,ignore.case = T)~"B Cell related",
   grepl(search_terms[2],combine_both, ignore.case = T)~"T Cell related",
@@ -101,6 +121,19 @@ second_plot
 Even with such a rudemenatry approach, one can already start to make interesting observations. 
 For example: Titles+abstracts that contained B cell related terms were present in datasets prepared
 by searching fo b cells, neutrophils, dendritic cells, t cells etc. 
+
+##Save plots:
+
+```{r}
+initial_path <- paste(getwd(),"datafiles/initial_plot.pdf",sep="/") %>% gsub("rmd/","",x = .);initial_path
+ggsave(initial_path,plot = initial_plot,device = "pdf",dpi = 320)
+
+second_path <- paste(getwd(),"datafiles/second_plot.pdf",sep="/") %>% gsub("rmd/","",x = .);second_path
+ggsave(second_path,plot = second_plot,device = "pdf",dpi = 320)
+
+
+```
+
 
 ## Conclusion:
 
