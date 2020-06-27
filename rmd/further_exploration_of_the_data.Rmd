@@ -16,9 +16,11 @@ library(ggiraph)
 ```
 
 ##load libraries
-```{r}(ggplot2)
+```{r}
+library(ggplot2)
 library(tidyverse)
-library
+library(tidytext)
+library(ggiraph)
 ```
 
 
