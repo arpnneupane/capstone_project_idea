@@ -141,8 +141,9 @@ my_data <- lapply(many_data, function(i){
                     abstract = AbstractText(i), authorlist = Author(i),
                     journal = Title(i), 
                     #mmddyy on Pubmed
-                    publishedon = paste(MonthPubmed(i),DayPubmed(i),YearPubmed(i),sep = "/")))
-})
+                    publishedon = paste(MonthPubmed(i),DayPubmed(i),YearPubmed(i),sep = "/"),country = Country(i)))
+    }
+  )
 
 for (i in names(my_data)){
   my_data[[i]] <- my_data[[i]] %>% mutate(dataset = i)
@@ -164,7 +165,7 @@ author_names <- function(df){#input is a dataframe
   #print(v)
   counter = 1
   for (i in 1:nrow(df)){
-    v[counter] = paste(df[i,1],df[i,2],sep = " ")
+    v[counter] = paste(df[i,2],df[i,1],sep = " ")
     counter = counter +1
     #print(v)
   }
@@ -172,7 +173,10 @@ author_names <- function(df){#input is a dataframe
   return(as.vector(v))
 }
 
+#saves author information as a list
 my_data <-  my_data %>% mutate(authorlist = sapply(authorlist,author_names))
+
+
 glimpse(my_data)
 ```
 
@@ -224,7 +228,14 @@ Can also look by just dataset (not year)
 ```{r eval = F}
 my_data %>% mutate(only_year = year(publishedon)) %>% group_by(dataset) %>% summarise(total = n()) %>%  mutate(prop = total/sum(total)) 
 
-#save.image(file = "Capstone_project_TDI2020")
+path <- paste(getwd(),"datafiles/Capstone_project_TDI2020",sep = "/")
+
+save.image(file = path)#save image of environment
+
+#save my_data object
+path <-  paste(getwd(),"datafiles/prelim_data",sep="/") 
+
+saveRDS(my_data,file = path)
 
 ```
 
