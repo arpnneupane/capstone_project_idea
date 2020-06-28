@@ -49,20 +49,13 @@ PMC, it may be best to use a “middleman” approach where the search is
 passed to PMC, results from PMC extracted, clustering performed (if
 necessary, as per user specification), and results presented.
 
-## References
+## Work on the topic
 
-Upon researching whether this idea is worthwhile, or viable, I came
-across the following:
-<https://github.com/MaksimEkin/COVID19-Literature-Clustering> Authors:
-Eren, E. Maksim. Solovyev, Nick. Nicholas, Charles. Raff, Edward
-
-Because of the author above seems to have performed some parts of what
-my proposal entails, I think it is important to cite their work.
-However, considering that my project proposal presents a new idea for
-searching for scientific literature, the project should still be
-considered a viable option as a capstone project. If implemented
-efficiently, the project could be an important tool for scientific
-research.
+The project is centered around the field of natural language processing.
+Specifically, the project aims to cluster PMC search results in an
+unsupervised manner. Cursory research on the topic suggests that
+multiple approaches can be employed in acheiving clustering, such as
+using k-means or PCA.
 
 ## Last bit of blabbering before coding
 
