@@ -255,7 +255,11 @@ First, the graphs look nicer! there are actual "clusters" compared to just doing
 HoverLocator (also from Seurat)
 ```{r}
 
+<<<<<<< HEAD
 #HoverLocator(plot = d1, information =FetchData(doc_seurat,vars = "articletitle"))
+=======
+HoverLocator(plot = d1, information =FetchData(doc_seurat,vars = "articletitle"))
+>>>>>>> 33b4f178e17e216d63ee3835c76331cc91ce192d
 
 ```
 What if we want to search for specific terms?
