@@ -157,7 +157,16 @@ I do not have expertise in this. However, since we are counting "features" per d
 I thought why not?
 
 The following was taken from Satijalab.org tutorial on singlecell clustering with Seurat
-```{r}
+```{r include = FALSE}
+library(Seurat)
+path = paste(getwd(),"datafiles/doc_seurat",sep="/") %>% gsub("/rmd","",x = .);path
+doc_seurat.list <- readRDS(path)
+doc_seurat <- doc_seurat.list$doc_seurat
+feature_information <- doc_seurat.list$feature_information
+rm(doc_seurat.list)
+```
+
+```{r eval=F}
 #remove PMID with no abstract
 my_data <- my_data %>% filter(abstract != "")
 
@@ -181,12 +190,16 @@ my_data_start_all <- my_data_start %>% group_by(PMID) %>% unnest_tokens(output =
 tb_word <- tibble(word = c(stop_words$word,"conclusion","conclusions","result","results","background","methods",
                            "method","material","materials","keyword","keywords","main","hypothesis","immune","cells","cell","immunology","immunity",
                            "mean","se","sd","cv","ci","pvalue","p","0.05","0.01","0.95","95","control","tx","con","nature","confidenceinterval",
-                           "confidence","interval","significant","0.001","objective","0.001","inflammation","findings","controls","suggest","suggests","levels","level","level","difference","significance","abstracttext","analysis","analyze","treated"))
+                           "confidence","interval","significant","0.001","objective","0.001","inflammation","findings","controls","suggest","suggests",
+                           "levels","level","level","difference","significance","abstracttext","analysis","analyze","treated",
+                           as.character(c(1:10))))
 
 #remove stop_words
 my_data_start_all <- my_data_start_all %>%ungroup %>% anti_join(tb_word,by = "word")
 
 #did this to generate tf, idf, and tf_idf for all
+my_data_start_all <- my_data_start_all %>% ungroup %>% rowwise %>%  mutate(char_length = nchar(word)) %>% filter(char_length > 2) %>% select(-char_length)
+
 my_data_start_all <- my_data_start_all %>% group_by(PMID,word) %>% summarize(count = n()) %>% ungroup %>% bind_tf_idf(word,PMID,count)
 
 #cast as a sparse matrix
@@ -239,29 +252,27 @@ doc_seurat <- FindClusters(doc_seurat, resolution = 3, n.start = 10)#took ~3-5 m
 #dimension reduction
 doc_seurat <- RunUMAP(doc_seurat, dims = 1:75, min.dist = 0.75,)
 
-#visualize
+```
+Visualizing
+```{r}
 d1 <- DimPlot(doc_seurat, reduction = "umap", pt.size = 0.1,group.by = "dataset") + ggtitle(label = "UMAP\ncolored by initial search query")
-d2 <- DimPlot(doc_seurat, reduction = "umap", pt.size = 0.1,label = T)+ggtitle(label = "UMAP\ncolored by clusters assiged by Seurat")
+d2 <- DimPlot(doc_seurat, reduction = "umap", pt.size = 0.1,label = T)+ggtitle(label = "UMAP\ncolored by clusters assiged by Seurat")+theme(legend.position ="none")
 
 d1
 
-d2+theme(legend.position ="none")
-
+d2
 ```
+
+
 
 Ok so this looks like an interesting approach.
 First, the graphs look nicer! there are actual "clusters" compared to just doing pca.
 
 HoverLocator (also from Seurat)
 ```{r}
-
-<<<<<<< HEAD
 #HoverLocator(plot = d1, information =FetchData(doc_seurat,vars = "articletitle"))
-=======
-HoverLocator(plot = d1, information =FetchData(doc_seurat,vars = "articletitle"))
->>>>>>> 33b4f178e17e216d63ee3835c76331cc91ce192d
-
 ```
+
 What if we want to search for specific terms?
 ```{r}
 plot_what <- function(whattolookfor){
@@ -285,11 +296,15 @@ However, we did get some clustering going based on features.
 
 I also tried to use the FindMarkers function to identify what terms were driving clustering.
 
+```{r eval=F}
+feature_information <- FindAllMarkers(doc_seurat)
+```
+
+Now if only I could figure out how to label clusters according to the terms that were higher in them!
+Maybe find a "general" theme?
 ```{r}
-#see d2 for cluster labels
-d2+theme(legend.position = "none")
-FindMarkers(doc_seurat, ident.1 = 32)
-#this cluster apparently contains information on nets (netrophil extracellular traps)
+feature_information %>% head
 
 ```
-Now if only I could figure out how to label clusters according to the terms that were higher in them! next time.
+
+
