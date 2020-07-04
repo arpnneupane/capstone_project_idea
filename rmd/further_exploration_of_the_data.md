@@ -235,7 +235,7 @@ clustering with Seurat
 
 ``` r
 #remove PMID with no abstract
-my_data <- my_data %>% filter(abstract != "")
+my_data <- my_data %>% ungroup %>%  filter(abstract != "")
 
 #combine title, author, abstract into a single feature
 my_data_concat <- my_data %>% filter(country!="China") %>% rowwise() %>% mutate(authorlist = unlist(authorlist) %>% paste(collapse=",") %>% gsub(" ","",x=.)) %>% filter(authorlist != "NANA") %>% 
@@ -259,7 +259,7 @@ tb_word <- tibble(word = c(stop_words$word,"conclusion","conclusions","result","
                            "mean","se","sd","cv","ci","pvalue","p","0.05","0.01","0.95","95","control","tx","con","nature","confidenceinterval",
                            "confidence","interval","significant","0.001","objective","0.001","inflammation","findings","controls","suggest","suggests",
                            "levels","level","level","difference","significance","abstracttext","analysis","analyze","treated",
-                           as.character(c(1:10))))
+                           as.character(c(1:10)),"significantly"))
 
 #remove stop_words
 my_data_start_all <- my_data_start_all %>%ungroup %>% anti_join(tb_word,by = "word")
@@ -429,3 +429,39 @@ feature_information %>% group_by(cluster) %>% filter(p_val_adj<0.05) %>% summari
     ##  9 8       igm,igg,iga,immunoglobulin,antibodies         
     ## 10 9       pregnancy,maternal,placental,fetal,endometrial
     ## # ... with 92 more rows
+
+Visualizing this information
+
+``` r
+d1 <- DimPlot(doc_seurat,reduction = "umap")
+umap_data <- d1$data
+umap_data <- umap_data %>% mutate(PMID = rownames(umap_data))
+umap_data <- umap_data %>% right_join(feature_information %>% mutate(ident = cluster) %>% select(-cluster) %>%
+                                        filter(p_val_adj<0.05) %>% group_by(ident) %>% 
+                                        summarise(features = paste(gene,sep=",")[1:2] %>% paste(.,collapse = ", ")),
+                                      by = "ident") %>% as_tibble()
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+my_data <- my_data %>% ungroup %>% filter(PMID %in% umap_data$PMID)
+                            
+umap_data <- umap_data %>% right_join(my_data ,by = "PMID")
+umap_data.mean <- umap_data %>% group_by(ident,features) %>% summarise(m.UMAP_1 = mean(UMAP_1),m.UMAP_2 = mean(UMAP_2))
+```
+
+    ## `summarise()` regrouping output by 'ident' (override with `.groups` argument)
+
+``` r
+library(ggrepel)
+g <- umap_data %>% ggplot(aes(x = UMAP_1, y = UMAP_2,color = dataset), show.legend=F)+
+  geom_point(size = 0.01)+
+  geom_point(data = umap_data.mean,aes(x = m.UMAP_1, y = m.UMAP_2), color = "black", size = 2)+
+  geom_text_repel(data = umap_data.mean, aes(x = m.UMAP_1, y = m.UMAP_2, label = features),inherit.aes = F)+
+  theme(legend.position = "none")
+g
+```
+
+![Only top 2 terms are
+shown](further_exploration_of_the_data_files/figure-gfm/unnamed-chunk-15-1.png)
