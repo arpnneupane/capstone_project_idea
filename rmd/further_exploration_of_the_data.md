@@ -408,3 +408,24 @@ feature_information %>% head
     ## significantly significantly
     ## cancer               cancer
     ## survival           survival
+
+``` r
+feature_information %>% group_by(cluster) %>% filter(p_val_adj<0.05) %>% summarise(features = paste(gene, sep=",")[1:5] %>% paste(.,collapse="," ))
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 102 x 2
+    ##    cluster features                                      
+    ##    <fct>   <chr>                                         
+    ##  1 0       patients,lymph,node,significantly,cancer      
+    ##  2 1       aki,kidney,ngal,urinary,renal                 
+    ##  3 2       axillary,breast,alnd,her2,mastectomy          
+    ##  4 3       treg,tregs,th17,foxp3,regulatory              
+    ##  5 4       allergic,asthma,airway,ige,rhinitis           
+    ##  6 5       pd1,pdl1,programmed,checkpoint,ctla4          
+    ##  7 6       cd80,dcs,dendritic,cd86,cd40                  
+    ##  8 7       lymphoma,dlbcl,lymphomas,diffuse,bcell        
+    ##  9 8       igm,igg,iga,immunoglobulin,antibodies         
+    ## 10 9       pregnancy,maternal,placental,fetal,endometrial
+    ## # ... with 92 more rows

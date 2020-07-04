@@ -304,6 +304,7 @@ Now if only I could figure out how to label clusters according to the terms that
 Maybe find a "general" theme?
 ```{r}
 feature_information %>% head
+feature_information %>% group_by(cluster) %>% filter(p_val_adj<0.05) %>% summarise(features = paste(gene, sep=",")[1:5] %>% paste(.,collapse="," ))
 
 ```
 
