@@ -1,5 +1,4 @@
-# capstone_project_idea
-Capstone project proposal for TDI_2020
+# Learning something new
 Arpan Neupane
 
 # Overview
