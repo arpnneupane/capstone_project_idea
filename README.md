@@ -11,3 +11,6 @@ Arpan Neupane
 # Clustering
 
 <a href="https://github.com/arpnneupane/capstone_project_idea/blob/master/rmd/further_exploration_of_the_data.md" target="_blank">attempting clustering</a>
+
+# Interactive plots
+<a href = "https://htmlpreview.github.io/?https://github.com/arpnneupane/capstone_project_idea/blob/master/rmd/3D_plots_plotly.html">plotly_plot</a>
