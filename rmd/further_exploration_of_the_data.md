@@ -222,7 +222,7 @@ ggsave(path,plot = plot_mds, device = "pdf",dpi = 300)
 
 The plot shows that it is possilbe to find colloborators (by direct
 inclusion of names in author list) or by closeness. This may be not be
-the best approach of clustering by authors. However, I think it is a
+the best approach of clustering by authors. However, I think it could be a
 step in the right direction.
 
 \#Can we further improve this? What if we treated each document as a
@@ -230,7 +230,7 @@ results from single cell RNAseq experiment. I do not have expertise in
 this. However, since we are counting “features” per document and looking
 across all our documents, I thought why not?
 
-The following was taken from Satijalab.org tutorial on singlecell
+The following was adaptedfrom Satijalab.org tutorial on singlecell
 clustering with Seurat
 
 ``` r
